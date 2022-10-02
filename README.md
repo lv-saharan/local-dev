@@ -5,7 +5,7 @@ a local dev server with simple api proxy
 # install
 
 ```bash
-npm i local-dev -D
+npm i local-dev-server -D
 ```
 
 # usage
