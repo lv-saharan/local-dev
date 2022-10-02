@@ -11,7 +11,7 @@ npm i local-dev -D
 # usage
 
 ```javascript
-import { dev } from "local-dev";
+import { dev } from "local-dev-server";
 const { reload } = dev({
   port: 9000,
 });

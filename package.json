@@ -1,5 +1,5 @@
 {
-  "name": "local-dev",
+  "name": "local-dev-server",
   "version": "1.0.0",
   "description": "a local dev server with simple api proxy",
   "main": "src/index.js",
