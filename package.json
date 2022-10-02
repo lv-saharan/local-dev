@@ -1,0 +1,33 @@
+{
+  "name": "local-dev",
+  "version": "1.0.0",
+  "description": "a local dev server with simple api proxy",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lv-saharan/local-dev.git"
+  },
+  "keywords": [
+    "dev",
+    "server",
+    "http",
+    "proxy",
+    "api",
+    "simple",
+    "static"
+  ],
+  "author": "lv-saharan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lv-saharan/local-dev/issues"
+  },
+  "homepage": "https://github.com/lv-saharan/local-dev#readme",
+  "devDependencies": {
+    "mime": "^3.0.0",
+    "open": "^8.4.0"
+  }
+}
