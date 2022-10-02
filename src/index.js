@@ -43,7 +43,7 @@ if (typeof EventSource != undefined) {
 </script>`
 
 export function dev(options = {}, api = {}) {
-    const { server, root, port, fixPath } = { ...defaultOptions, options }
+    const { server, root, port, fixPath } = { ...defaultOptions, ...options }
     api = { ...defaultApi, ...api }
     const devServer = http.createServer()
     devServer.listen(port)

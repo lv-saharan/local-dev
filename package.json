@@ -1,6 +1,6 @@
 {
   "name": "local-dev-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "a local dev server with simple api proxy",
   "main": "src/index.js",
   "type": "module",
