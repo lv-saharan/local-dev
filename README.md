@@ -1,4 +1,4 @@
-# local-dev
+# local-dev-server
 
 a local dev server with simple api proxy
 
