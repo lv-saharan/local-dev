@@ -1,6 +1,12 @@
 # local-dev-server
 
-a local dev server with simple api proxy,and a esbuild dev server implements.
+a local dev server with simple api proxy.
+
+a esbuild dev server implements.
+
+local-dev-server use EventSource to notify client to reload. 
+
+https://developer.mozilla.org/en-US/docs/Web/API/EventSource
 
 # install
 
@@ -12,6 +18,8 @@ npm i local-dev-server -D
 
 ```javascript
 import { dev } from "local-dev-server";
+//dev function return a reload callback ,
+//you can use reload function to reload current dev pages
 const { reload } = dev({
   port: 9000,
 });
@@ -21,7 +29,7 @@ setInterval(() => {
   reload("test....");
 }, 10000);
 ```
-# options
+# default options
 ```javascript
 const options={
     server: "localhost",
