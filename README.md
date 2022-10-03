@@ -1,6 +1,6 @@
 # local-dev-server
 
-a local dev server with simple api proxy
+a local dev server with simple api proxy,and a esbuild dev server implements.
 
 # install
 
@@ -58,4 +58,32 @@ const apiOptions={
 
 dev(options,apiOptions)
 
+```
+
+# working with esbuild
+``` javascript
+import { dev } from "local-dev-server";
+const { reload } = dev({
+  port: 9000,
+});
+//some code
+//.....
+esbuild.build({
+    ...options,
+    entryPoints: [infile],
+    outfile,
+    watch:
+    {
+        onRebuild(error, result) {
+            if (error) console.error('watch build failed:', error)
+            else {
+                console.log('watch build succeeded:', result)
+                //when esbuild rebuild,call reload function
+                reload("esbuild rebuild ok,reload now!")
+            }
+        },
+    }
+}).then(result => {
+    console.log(`build  ${module} ok!`)
+})
 ```
