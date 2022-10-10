@@ -35,7 +35,18 @@ const options={
     server: "localhost",
     root: "./",
     port: 8900,
-
+    response:(filePath,res)=>{
+        //if use esbuild ,and write:false
+        //find the contents of esbuild
+        
+        const outfile = buildResult?.outputFiles.find(file => file.path == filePath)
+        if (outfile) {
+            res.setHeader('Content-Type', 'application/javascript;charset=utf-8');
+            res.end(outfile.contents)
+            return true
+        }
+        return false
+    },
     //use fixPath to handle req path
     fixPath: (req) => {
         const [reqPath] = req.url.split('?')
@@ -80,7 +91,9 @@ esbuild.build({
     ...options,
     entryPoints: [infile],
     outfile,
+    write:false
     watch:
+
     {
         onRebuild(error, result) {
             if (error) console.error('watch build failed:', error)

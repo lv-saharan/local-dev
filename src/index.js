@@ -14,6 +14,9 @@ const defaultOptions = {
     server: "localhost",
     root: "./",
     port: 8900,
+    response: (filePath, res) => {
+        return false
+    },
 
     fixPath: (req) => {
         const [reqPath] = req.url.split('?')
@@ -43,7 +46,7 @@ if (typeof EventSource != undefined) {
 </script>`
 
 export function dev(options = {}, api = {}) {
-    const { server, root, port, fixPath } = { ...defaultOptions, ...options }
+    const { server, root, port, fixPath, response } = { ...defaultOptions, ...options }
     api = { ...defaultApi, ...api }
     const devServer = http.createServer()
     devServer.listen(port)
@@ -73,57 +76,47 @@ export function dev(options = {}, api = {}) {
             }
             console.log("call api", options)
 
-            const p = new Promise((resolve, reject) => {
-                const postbody = [];
-                req.on("data", chunk => {
-                    postbody.push(chunk);
-                })
-                req.on('end', () => {
-                    const postbodyBuffer = Buffer.concat(postbody);
-                    resolve(postbodyBuffer)
-                })
+            // Forward each  incoming api  request to api server
+            const proxyReq = http.request(options, proxyRes => {
+                res.writeHead(proxyRes.statusCode, proxyRes.headers);
+                proxyRes.pipe(res, { end: true });
             });
-            p.then((postbodyBuffer) => {
-                const responsebody = []
-                const request = http.request(options, (response) => {
-                    res.writeHead(response.statusCode, response.headers)
-                    response.on('data', (chunk) => {
-                        responsebody.push(chunk)
-                    })
-                    response.on("end", () => {
-                        const responsebodyBuffer = Buffer.concat(responsebody)
-                        res.end(responsebodyBuffer);
-                    })
-
-                })
-                request.write(postbodyBuffer)
-                request.end();
-            })
+            // Forward the body of the request 
+            req.pipe(proxyReq, { end: true });
         } else {
             if (req.method == "GET") {
                 console.log("get url", req.url)
                 const [reqPath] = req.url.split('?')
                 const { fileName, extName } = fixPath(req)
                 const filePath = path.resolve(root, `./${decodeURIComponent(reqPath)}${fileName}${extName}`)
-                if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
-                    try {
-                        res.setHeader('Content-Type', mime.getType(filePath) + ';charset=utf-8');
-                        if (path.extname(filePath) == ".html") {
-                            let contents = fs.readFileSync(filePath, "utf8");
-                            res.end(contents.replace(/(<\/body>)/i, `${sseInjection}$1`));
+                try {
+                    if (!response(filePath, res)) {
+                        if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
+                            try {
+                                res.setHeader('Content-Type', mime.getType(filePath) + ';charset=utf-8');
+                                if (path.extname(filePath) == ".html") {
+                                    let contents = fs.readFileSync(filePath, "utf8");
+                                    res.end(contents.replace(/(<\/body>)/i, `${sseInjection}$1`));
+                                } else {
+                                    fs.createReadStream(filePath).pipe(res)
+                                }
+                            } catch (exc) {
+                                res.writeHead(500, { 'Content-Type': 'text/plain' })
+                                res.end('500 ~')
+                                console.error(exc)
+                            }
+
                         } else {
-                            fs.createReadStream(filePath).pipe(res)
+                            res.writeHead(404, { 'Content-Type': 'text/plain' })
+                            res.end('404 ~')
                         }
-                    } catch (exc) {
-                        res.writeHead(500, { 'Content-Type': 'text/plain' })
-                        res.end('500 ~')
-                        console.error(exc)
                     }
 
-                } else {
-                    res.writeHead(404, { 'Content-Type': 'text/plain' })
-                    res.end('404 ~')
                 }
+                catch (exc) {
+                    console.error("call  function error ", exc)
+                }
+
             }
         }
 
