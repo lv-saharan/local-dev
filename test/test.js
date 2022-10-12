@@ -14,4 +14,4 @@ const { reload } = dev({ root: "./test/" }, {
 
 setInterval(() => {
     reload("test....")
-}, 10000);
+}, 1000);

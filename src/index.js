@@ -67,6 +67,7 @@ export function dev(options = {}, api = {}) {
             });
             res.write("retry: 5000\n\n")
             watches.push(res)
+            return
         }
 
         let dispatch = api.dispatch(req.url)
