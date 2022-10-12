@@ -6,6 +6,10 @@ import open from "open"
 
 const defaultApi = {
     host: "localhost",
+    dispatch(url) {
+        //dispatch can return a host ，port，path！！！
+        return false
+    },
     port: 8080,
     from: "/api",
     to: "/api"
@@ -61,17 +65,25 @@ export function dev(options = {}, api = {}) {
                 'Connection': 'keep-alive',
                 'Access-Control-Allow-Origin': '*',
             });
-            res.write("retry: 10000\n\n")
+            res.write("retry: 5000\n\n")
             watches.push(res)
+        }
 
+        let dispatch = api.dispatch(req.url)
+        if (dispatch === false) {
+            dispatch = api
+        }
+        else {
+            dispatch = { ...api, ...dispatch }
+        }
 
-        } else if (req.url.startsWith(api.from)) {
+        if (req.url.startsWith(dispatch.from)) {
             const { connection, host, ...originHeaders } = req.headers;
             const options = {
                 method: req.method,
-                hostname: api.host,
-                port: api.port,
-                path: api.to + req.url.substring(api.from.length),
+                hostname: dispatch.host,
+                port: dispatch.port,
+                path: dispatch.to + req.url.substring(dispatch.from.length),
                 headers: { ...originHeaders }
             }
             console.log("call api", options)
