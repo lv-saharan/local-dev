@@ -128,3 +128,10 @@ esbuild.build({
     console.log(`build  ${module} ok!`)
 })
 ```
+# open browser support
+
+```javascript
+//openBrowser :defualt,chrome,firefox,edge
+//openBrowser set true,will open chrome
+const { reload } = dev({ root: "./test/",openBrowser:"edge" })
+```

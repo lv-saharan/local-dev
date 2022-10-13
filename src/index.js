@@ -16,6 +16,7 @@ const defaultApi = {
 }
 const defaultOptions = {
     server: "localhost",
+    openBrowser: true,
     root: "./",
     port: 8900,
     response: (filePath, res) => {
@@ -50,11 +51,23 @@ if (typeof EventSource != undefined) {
 </script>`
 
 export function dev(options = {}, api = {}) {
-    const { server, root, port, fixPath, response } = { ...defaultOptions, ...options }
+    const { server, root, port, openBrowser, fixPath, response } = { ...defaultOptions, ...options }
     api = { ...defaultApi, ...api }
     const devServer = http.createServer()
     devServer.listen(port)
-    open(`http://${server}:${port}`, "chrome")
+    const serverURL = `http://${server}:${port}`
+    console.info("local-dev-server:", serverURL)
+    if (openBrowser) {
+        let app = "chrome"
+        if (openBrowser !== true) {
+            app = openBrowser
+        }
+        open(serverURL, {
+            app: {
+                name: open.apps[app]
+            }
+        })
+    }
 
     const watches = []
     devServer.on("request", (req, res) => {

@@ -1,5 +1,5 @@
 import { dev } from "../src/index.js"
-const { reload } = dev({ root: "./test/" }, {
+const { reload } = dev({ root: "./test/",openBrowser:"edge" }, {
     dispatch: (url) => {
         console.log(url)
 
