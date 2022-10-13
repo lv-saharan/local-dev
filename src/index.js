@@ -119,6 +119,7 @@ export function dev(options = {}, api = {}) {
                     if (!response(filePath, res)) {
                         if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
                             try {
+                                res.setHeader('Access-Control-Allow-Origin', '*');
                                 res.setHeader('Content-Type', mime.getType(filePath) + ';charset=utf-8');
                                 if (path.extname(filePath) == ".html") {
                                     let contents = fs.readFileSync(filePath, "utf8");
