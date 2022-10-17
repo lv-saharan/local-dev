@@ -56,7 +56,7 @@ export function dev(options = {}, api = {}) {
     const devServer = http.createServer()
     devServer.listen(port)
     const serverURL = `http://${server}:${port}`
-    console.info("local-dev-server:", serverURL)
+    console.info("local-dev-server start:", serverURL)
     if (openBrowser) {
         let app = "chrome"
         if (openBrowser !== true) {
@@ -100,7 +100,7 @@ export function dev(options = {}, api = {}) {
                 path: dispatch.to + req.url.substring(dispatch.from.length),
                 headers: { ...originHeaders }
             }
-            console.log("call api", options)
+            console.log("call api:", options)
 
             // Forward each  incoming api  request to api server
             const proxyReq = http.request(options, proxyRes => {
@@ -108,10 +108,14 @@ export function dev(options = {}, api = {}) {
                 proxyRes.pipe(res, { end: true });
             });
             // Forward the body of the request 
-            req.pipe(proxyReq, { end: true });
+            req.pipe(proxyReq, { end: true }).on("error", err => {
+                console.error("pipe proxy request error", err)
+                res.writeHead(500, { 'Content-Type': 'text/plain' })
+                res.end('500 ~')
+            })
         } else {
             if (req.method == "GET") {
-                console.log("get url", req.url)
+                console.log("get url:", req.url)
                 const [reqPath] = req.url.split('?')
                 const { fileName, extName } = fixPath(req)
                 const filePath = path.resolve(root, `./${decodeURIComponent(reqPath)}${fileName}${extName}`)
