@@ -76,7 +76,7 @@ const apiOptions = {
   port: 8080,
   from: "/api",
   to: "/api",
-  //use dispatch can handle multi server apis
+  //use dispatch to handle multi server apis
   dispatch(url) {
     if (url.startsWith("/abc")) {
       return {
