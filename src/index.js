@@ -4,7 +4,7 @@ import mime from "mime"
 import fs from "fs"
 import open from "open"
 
-const defaultApi = {
+const defaultProxy = {
     host: "localhost",
     dispatch(url) {
         //dispatch can return a host ，port，path！！！
@@ -50,9 +50,9 @@ if (typeof EventSource != undefined) {
 }
 </script>`
 
-export function dev(options = {}, api = {}) {
+export function dev(options = {}, proxy = {}) {
     const { server, root, port, openBrowser, fixPath, response } = { ...defaultOptions, ...options }
-    api = { ...defaultApi, ...api }
+    proxy = { ...defaultProxy, ...proxy }
     const devServer = http.createServer()
     devServer.listen(port)
     const serverURL = `http://${server}:${port}`
@@ -83,12 +83,12 @@ export function dev(options = {}, api = {}) {
             return
         }
 
-        let dispatch = api.dispatch(req.url)
+        let dispatch = proxy.dispatch(req.url)
         if (dispatch === false) {
-            dispatch = api
+            dispatch = proxy
         }
         else {
-            dispatch = { ...api, ...dispatch }
+            dispatch = { ...proxy, ...dispatch }
         }
 
         if (req.url.startsWith(dispatch.from)) {
@@ -100,9 +100,9 @@ export function dev(options = {}, api = {}) {
                 path: dispatch.to + req.url.substring(dispatch.from.length),
                 headers: { ...originHeaders }
             }
-            console.log("call api:", options)
+            console.log("call proxy:", options)
 
-            // Forward each  incoming api  request to api server
+            // Forward each  incoming proxy  request to proxy server
             const proxyReq = http.request(options, proxyRes => {
                 res.writeHead(proxyRes.statusCode, proxyRes.headers);
                 proxyRes.pipe(res, { end: true });
