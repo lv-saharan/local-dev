@@ -37,20 +37,7 @@ const options = {
   server: "localhost",
   root: "./",
   port: 8900,
-  response: (filePath, res) => {
-    //if use esbuild ,and write:false
-    //find the contents of esbuild
-
-    const outfile = buildResult?.outputFiles.find(
-      (file) => file.path == filePath
-    );
-    if (outfile) {
-      res.setHeader("Content-Type", "application/javascript;charset=utf-8");
-      res.end(outfile.contents);
-      return true;
-    }
-    return false;
-  },
+  
   //use fixPath to handle req path
   fixPath: (req) => {
     const [reqPath] = req.url.split("?");
@@ -102,8 +89,23 @@ dev(options, apiOptions);
 
 ```javascript
 import { dev } from "local-dev-server";
+let buildResult=null
 const { reload } = dev({
   port: 9000,
+  response: (filePath, res) => {
+    //if use esbuild ,and write:false
+    //find the contents of esbuild
+
+    const outfile = buildResult?.outputFiles.find(
+      (file) => file.path == filePath
+    );
+    if (outfile) {
+      res.setHeader("Content-Type", "application/javascript;charset=utf-8");
+      res.end(outfile.contents);
+      return true;
+    }
+    return false;
+  },
 });
 //some code
 //.....
@@ -120,12 +122,14 @@ esbuild.build({
             else {
                 console.log('watch build succeeded:', result)
                 //when esbuild rebuild,call reload function
+                buildResult=result
                 reload("esbuild rebuild ok,reload now!")
             }
         },
     }
 }).then(result => {
     console.log(`build  ${module} ok!`)
+    buildResult=result
 })
 ```
 # open browser support
