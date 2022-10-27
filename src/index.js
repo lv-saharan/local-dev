@@ -41,14 +41,15 @@ const defaultOptions = {
         return { fileName, extName }
     }
 }
-const sseInjection = `<script>
+const watchingScript = `
 if (typeof EventSource != undefined) {
     const sse = new EventSource("/--watch")
     sse.addEventListener("message", evt => {
        if(evt.data=="reload") window.location.reload()
     })
 }
-</script>`
+`
+const sseInjection = `<script src="/--watching"></script>`
 
 export function dev(options = {}, proxy = {}) {
     const { server, root, port, openBrowser, fixPath, response } = { ...defaultOptions, ...options }
@@ -71,7 +72,15 @@ export function dev(options = {}, proxy = {}) {
 
     const watches = []
     devServer.on("request", (req, res) => {
-        if (req.url.startsWith("/--watch")) {
+        if (req.url == "/--watching") {
+            res.writeHead(200, {
+                'Content-Type': 'application/javascript',
+                'Access-Control-Allow-Origin': '*',
+            });
+            res.end(watchingScript)
+            return
+        }
+        if (req.url == "/--watch") {
             res.writeHead(200, {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
