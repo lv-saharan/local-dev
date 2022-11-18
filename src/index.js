@@ -53,7 +53,9 @@ const sseInjection = `<script src="/--watching"></script>`
 
 export function dev(options = {}, proxy = {}) {
     const { server, root, port, openBrowser, fixPath, response } = { ...defaultOptions, ...options }
-    proxy = { ...defaultProxy, ...proxy }
+    if (proxy instanceof Array === false) {
+        proxy = { ...defaultProxy, ...proxy }
+    }
     const devServer = http.createServer()
     devServer.listen(port)
     const serverURL = `http://${server}:${port}`
@@ -92,13 +94,22 @@ export function dev(options = {}, proxy = {}) {
             return
         }
 
-        let dispatch = proxy.dispatch(req.url)
-        if (dispatch === false) {
-            dispatch = proxy
+
+        let dispatch = defaultProxy
+        if (proxy instanceof Array) {
+            const rule = proxy.find(({ from }) => req.url.startsWith(from))
+            if (rule) dispatch = rule
+
+        } else {
+            dispatch = proxy.dispatch(req.url)
+            if (dispatch === false) {
+                dispatch = proxy
+            }
+            else {
+                dispatch = { ...proxy, ...dispatch }
+            }
         }
-        else {
-            dispatch = { ...proxy, ...dispatch }
-        }
+
 
         if (req.url.startsWith(dispatch.from)) {
             const { connection, host, ...originHeaders } = req.headers;
