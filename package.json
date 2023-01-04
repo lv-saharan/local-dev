@@ -1,11 +1,12 @@
 {
   "name": "local-dev-server",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "a local dev server with simple api proxy.easy and fast.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "node ./test/test.js"
+    "test": "node ./test/test.js",
+    "build": "node esbuild.js"
   },
   "repository": {
     "type": "git",
@@ -31,5 +32,8 @@
   "dependencies": {
     "mime": "^3.0.0",
     "open": "^8.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.16.13"
   }
 }

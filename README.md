@@ -37,7 +37,7 @@ const options = {
   server: "localhost",
   root: "./",
   port: 8900,
-  
+
   //use fixPath to handle req path
   fixPath: (req) => {
     const [reqPath] = req.url.split("?");
@@ -69,13 +69,19 @@ const apiOptions = {
       return {
         from: "/abc",
         to: "/def",
+        //support url proxy header
+        headers: (req) => {
+          return {
+            "From-Url": req.url,
+          };
+        },
       };
-    }else if(url.startsWith("/aaa")){
-        return {
-            from: "/abc",
-            to: "/def",
-            host: "local",
-            port: 9999
+    } else if (url.startsWith("/aaa")) {
+      return {
+        from: "/abc",
+        to: "/def",
+        host: "local",
+        port: 9999,
       };
     }
     return false;
@@ -132,10 +138,11 @@ esbuild.build({
     buildResult=result
 })
 ```
+
 # open browser support
 
 ```javascript
 //openBrowser :defualt,chrome,firefox,edge
 //openBrowser set true,will open chrome
-const { reload } = dev({ root: "./test/",openBrowser:"edge" })
+const { reload } = dev({ root: "./test/", openBrowser: "edge" });
 ```

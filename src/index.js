@@ -113,12 +113,13 @@ export function dev(options = {}, proxy = {}) {
 
         if (req.url.startsWith(dispatch.from)) {
             const { connection, host, ...originHeaders } = req.headers;
+            const dispatchHeaders = typeof dispatch.headers == "function" ? dispatch.headers(req) : dispatch.headers ?? {}
             const options = {
                 method: req.method,
                 hostname: dispatch.host,
                 port: dispatch.port,
                 path: dispatch.to + req.url.substring(dispatch.from.length),
-                headers: { ...originHeaders }
+                headers: { ...originHeaders, ...dispatchHeaders }
             }
             console.log("call proxy:", options)
 
