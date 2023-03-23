@@ -138,7 +138,38 @@ esbuild.build({
     buildResult=result
 })
 ```
-
+## new esbuild version had remove onRebuild event
+## use a plugin to get build result
+```javascript
+const ctx = await esbuild.context({
+    ...options,
+    write: false,
+    outfile,
+    plugins: [
+      {
+        name: "watch-plugin",
+        setup(build) {
+          build.onStart(() => {
+            console.log(
+              "starting build.............................................."
+            );
+          });
+          build.onEnd((result) => {
+            if (result.errors.length == 0) {
+              buildResult = result;
+              reload("[app rebuild ok]");
+            } else {
+              console.log("build error", result.errors);
+            }
+          });
+        },
+      },
+       
+    ],
+  });
+  await ctx.watch();
+  console.log("watching.........................................");
+```
 # open browser support
 
 ```javascript
