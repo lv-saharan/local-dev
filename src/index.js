@@ -24,6 +24,11 @@ const defaultOptions = {
     return false;
   },
 
+  notFoundHandler(req, res) {
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.write("404 ,Not Found!");
+  },
+  serverErrorHandler(req, res) {},
   fixPath: (req) => {
     const [reqPath] = req.url.split("?");
     const accept = req.headers.accept ?? "";
@@ -53,7 +58,17 @@ if (typeof EventSource != undefined) {
 const sseInjection = `<script src="/--watching"></script>`;
 
 export function dev(options = {}, proxy = {}) {
-  const { server, root, home, port, openBrowser, fixPath, response } = {
+  const {
+    server,
+    root,
+    home,
+    port,
+    openBrowser,
+    notFoundHandler,
+    serverErrorHandler,
+    fixPath,
+    response,
+  } = {
     ...defaultOptions,
     ...options,
   };
@@ -167,11 +182,22 @@ export function dev(options = {}, proxy = {}) {
               } catch (exc) {
                 res.writeHead(500, { "Content-Type": "text/plain" });
                 res.end("500 ~");
+
                 console.error(exc);
+                if (typeof serverErrorHandler == "function") {
+                  serverErrorHandler(req, res);
+                }
+                if (!res.closed) {
+                  res.end();
+                }
               }
             } else {
-              res.writeHead(404, { "Content-Type": "text/plain" });
-              res.end("404 ~");
+              if (typeof notFoundHandler == "function") {
+                notFoundHandler(req, res);
+              }
+              if (!res.closed) {
+                res.end();
+              }
             }
           }
         } catch (exc) {
