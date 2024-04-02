@@ -33,12 +33,14 @@ const defaultOptions = {
     let [reqPath] = req.url.split("?");
     reqPath = decodeURIComponent(reqPath);
     let paths = reqPath.split("/");
-    let [fileName, extName] = paths.pop().split(".");
+    let names =paths.pop().split(".")
+    let extName =names.pop()
+    let fileName =names.join(".")
     if (fileName === "") {
       //  /结尾
       fileName = "index";
     }
-    if (extName === undefined) {
+    if (extName === '') {
       const accept = req.headers.accept ?? "";
       if (accept.includes("text/html")) {
         extName = ".html";
