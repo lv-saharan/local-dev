@@ -30,21 +30,26 @@ const defaultOptions = {
   },
   serverErrorHandler(req, res) {},
   fixPath: (req) => {
-    const [reqPath] = req.url.split("?");
-    const accept = req.headers.accept ?? "";
-    let fileName = "";
-    let extName = "";
-    if (!path.extname(reqPath)) {
-      if (reqPath.endsWith("/")) {
-        fileName = "index";
-      }
+    let [reqPath] = req.url.split("?");
+    reqPath = decodeURIComponent(reqPath);
+    let paths = reqPath.split("/");
+    let [fileName, extName] = paths.pop().split(".");
+    if (fileName === "") {
+      //  /结尾
+      fileName = "index";
+    }
+    if (extName === undefined) {
+      const accept = req.headers.accept ?? "";
       if (accept.includes("text/html")) {
         extName = ".html";
       } else if (accept == "*/*") {
         extName = ".js";
       }
+    } else {
+      extName = "." + extName;
     }
-    return { fileName, extName };
+
+    return { reqPath: paths.join("/") + "/", fileName, extName };
   },
 };
 const watchingScript = `
@@ -155,14 +160,17 @@ export function dev(options = {}, proxy = {}) {
     } else {
       if (req.method == "GET") {
         console.log("get url:", req.url);
-        const [reqPath] = req.url.split("?");
-        const { fileName, extName } = fixPath(req);
-        const filePath = path.resolve(
-          root,
-          `./${decodeURIComponent(reqPath)}${fileName}${extName}`
-        );
+        const { fileName, extName, reqPath } = fixPath(req);
+        const filePath = path.resolve(root, `.${reqPath}${fileName}${extName}`);
         try {
-          if (!response(filePath, res)) {
+          if (
+            !response(filePath, res, {
+              fileName,
+              extName,
+              reqPath,
+              request: req,
+            })
+          ) {
             if (
               fs.existsSync(filePath) &&
               !fs.statSync(filePath).isDirectory()
