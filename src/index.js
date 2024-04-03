@@ -19,7 +19,7 @@ const defaultOptions = {
   openBrowser: true,
   root: "./",
   home: "/",
-  port: 8900,
+  port: 8081,
   response: (filePath, res) => {
     return false;
   },
@@ -28,7 +28,9 @@ const defaultOptions = {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.write("404 ,Not Found!");
   },
+
   serverErrorHandler(req, res) {},
+
   fixPath: (req) => {
     let [reqPath] = req.url.split("?");
     reqPath = decodeURIComponent(reqPath);
@@ -51,7 +53,7 @@ const defaultOptions = {
       extName = "." + extName;
     }
 
-    return { reqPath: paths.join("/") + "/", fileName, extName };
+    return { reqDir: paths.join("/") + "/", fileName, extName };
   },
 };
 const watchingScript = `
@@ -162,14 +164,14 @@ export function dev(options = {}, proxy = {}) {
     } else {
       if (req.method == "GET") {
         console.log("get url:", req.url);
-        const { fileName, extName, reqPath } = fixPath(req);
-        const filePath = path.resolve(root, `.${reqPath}${fileName}${extName}`);
+        const { fileName, extName, reqDir } = fixPath(req);
+        const filePath = path.resolve(root, `.${reqDir}${fileName}${extName}`);
         try {
           if (
             !response(filePath, res, {
               fileName,
               extName,
-              reqPath,
+              reqDir,
               request: req,
             })
           ) {
