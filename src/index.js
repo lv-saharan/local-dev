@@ -35,14 +35,14 @@ const defaultOptions = {
     let [reqPath] = req.url.split("?");
     reqPath = decodeURIComponent(reqPath);
     let paths = reqPath.split("/");
-    let names =paths.pop().split(".")
-    let extName =names.pop()
-    let fileName =names.join(".")
+    let names = paths.pop().split(".");
+    let extName = names.pop();
+    let fileName = names.join(".");
     if (fileName === "") {
       //  /结尾
       fileName = "index";
     }
-    if (extName === '') {
+    if (extName === "") {
       const accept = req.headers.accept ?? "";
       if (accept.includes("text/html")) {
         extName = ".html";
@@ -66,6 +66,33 @@ if (typeof EventSource != undefined) {
 `;
 const sseInjection = `<script src="/--watching"></script>`;
 
+export function proxy(req, res, proxy) {
+  const { connection, host, ...originHeaders } = req.headers;
+  const proxyHeaders =
+    typeof proxy.headers == "function"
+      ? proxy.headers(req)
+      : proxy.headers ?? {};
+  const options = {
+    method: req.method,
+    hostname: proxy.host,
+    port: proxy.port,
+    path: proxy.to + req.url.substring(proxy.from.length),
+    headers: { ...originHeaders, ...proxyHeaders },
+  };
+  console.log("call proxy:", options);
+
+  // Forward each  incoming proxy  request to proxy server
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+  // Forward the body of the request
+  req.pipe(proxyReq, { end: true }).on("error", (err) => {
+    console.error("pipe proxy request error", err);
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end("500 ~");
+  });
+}
 export function dev(options = {}, proxy = {}) {
   const {
     server,
@@ -136,31 +163,7 @@ export function dev(options = {}, proxy = {}) {
     }
 
     if (req.url.startsWith(dispatch.from)) {
-      const { connection, host, ...originHeaders } = req.headers;
-      const dispatchHeaders =
-        typeof dispatch.headers == "function"
-          ? dispatch.headers(req)
-          : dispatch.headers ?? {};
-      const options = {
-        method: req.method,
-        hostname: dispatch.host,
-        port: dispatch.port,
-        path: dispatch.to + req.url.substring(dispatch.from.length),
-        headers: { ...originHeaders, ...dispatchHeaders },
-      };
-      console.log("call proxy:", options);
-
-      // Forward each  incoming proxy  request to proxy server
-      const proxyReq = http.request(options, (proxyRes) => {
-        res.writeHead(proxyRes.statusCode, proxyRes.headers);
-        proxyRes.pipe(res, { end: true });
-      });
-      // Forward the body of the request
-      req.pipe(proxyReq, { end: true }).on("error", (err) => {
-        console.error("pipe proxy request error", err);
-        res.writeHead(500, { "Content-Type": "text/plain" });
-        res.end("500 ~");
-      });
+      proxy(req, res, dispatch);
     } else {
       if (req.method == "GET") {
         console.log("get url:", req.url);
@@ -168,12 +171,17 @@ export function dev(options = {}, proxy = {}) {
         const filePath = path.resolve(root, `.${reqDir}${fileName}${extName}`);
         try {
           if (
-            !response(filePath, res, {
-              fileName,
-              extName,
-              reqDir,
-              request: req,
-            })
+            !response(
+              filePath,
+              res,
+              {
+                fileName,
+                extName,
+                reqDir,
+                req,
+              },
+              req
+            )
           ) {
             if (
               fs.existsSync(filePath) &&
