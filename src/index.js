@@ -69,22 +69,22 @@ if (typeof EventSource != undefined) {
 `;
 const sseInjection = `<script src="/--watching"></script>`;
 
-export function proxy(req, res, proxy) {
+export function proxy(req, res, proxyOptions) {
   const { connection, host, ...originHeaders } = req.headers;
   const proxyHeaders =
-    typeof proxy.headers == "function"
-      ? proxy.headers(req)
-      : proxy.headers ?? {};
+    typeof proxyOptions.headers == "function"
+      ? proxyOptions.headers(req)
+      : proxyOptions.headers ?? {};
   const options = {
     method: req.method,
-    hostname: proxy.host,
-    port: proxy.port,
-    path: proxy.to + req.url.substring(proxy.from.length),
+    hostname: proxyOptions.host,
+    port: proxyOptions.port,
+    path: proxyOptions.to + req.url.substring(proxyOptions.from.length),
     headers: { ...originHeaders, ...proxyHeaders },
   };
   console.log("call proxy:", options);
 
-  const proxyRequest = dispatch.https ? https.request : http.request;
+  const proxyRequest = proxyOptions.https ? https.request : http.request;
 
   // Forward each  incoming proxy  request to proxy server
   const proxyReq = proxyRequest(options, (proxyRes) => {
@@ -100,7 +100,7 @@ export function proxy(req, res, proxy) {
   // Forward the body of the request
   req.pipe(proxyReq, { end: true });
 }
-export function dev(options = {}, proxy = {}) {
+export function dev(options = {}, proxyOptions = {}) {
   const {
     server,
     root,
@@ -115,8 +115,8 @@ export function dev(options = {}, proxy = {}) {
     ...defaultOptions,
     ...options,
   };
-  if (proxy instanceof Array === false) {
-    proxy = { ...defaultProxy, ...proxy };
+  if (proxyOptions instanceof Array === false) {
+    proxyOptions = { ...defaultProxy, ...proxyOptions };
   }
   const devServer = http.createServer();
   devServer.listen(port);
@@ -157,15 +157,15 @@ export function dev(options = {}, proxy = {}) {
     }
 
     let dispatch = defaultProxy;
-    if (proxy instanceof Array) {
-      const rule = proxy.find(({ from }) => req.url.startsWith(from));
+    if (proxyOptions instanceof Array) {
+      const rule = proxyOptions.find(({ from }) => req.url.startsWith(from));
       if (rule) dispatch = rule;
     } else {
-      dispatch = proxy.dispatch(req.url);
+      dispatch = proxyOptions.dispatch(req.url);
       if (dispatch === false) {
-        dispatch = proxy;
+        dispatch = proxyOptions;
       } else {
-        dispatch = { ...proxy, ...dispatch };
+        dispatch = { ...proxyOptions, ...dispatch };
       }
     }
 
