@@ -1,4 +1,6 @@
 import http from "http";
+import https from "https";
+
 import path from "path";
 import mime from "mime";
 import fs from "fs";
@@ -6,6 +8,7 @@ import open from "open";
 
 const defaultProxy = {
   host: "localhost",
+  https: false,
   dispatch(url) {
     //dispatch can return a host ，port，path！！！
     return false;
@@ -81,17 +84,21 @@ export function proxy(req, res, proxy) {
   };
   console.log("call proxy:", options);
 
+  const proxyRequest = dispatch.https ? https.request : http.request;
+
   // Forward each  incoming proxy  request to proxy server
-  const proxyReq = http.request(options, (proxyRes) => {
+  const proxyReq = proxyRequest(options, (proxyRes) => {
     res.writeHead(proxyRes.statusCode, proxyRes.headers);
     proxyRes.pipe(res, { end: true });
   });
-  // Forward the body of the request
-  req.pipe(proxyReq, { end: true }).on("error", (err) => {
+
+  proxyReq.on("error", (err) => {
     console.error("pipe proxy request error", err);
     res.writeHead(500, { "Content-Type": "text/plain" });
     res.end("500 ~");
   });
+  // Forward the body of the request
+  req.pipe(proxyReq, { end: true });
 }
 export function dev(options = {}, proxy = {}) {
   const {
