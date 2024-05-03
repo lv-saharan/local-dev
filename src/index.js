@@ -84,14 +84,27 @@ export function proxy(req, res, proxyOptions) {
   };
   console.log("call proxy:", options);
 
+ 
   const proxyRequest = proxyOptions.https ? https.request : http.request;
 
   // Forward each  incoming proxy  request to proxy server
   const proxyReq = proxyRequest(options, (proxyRes) => {
+    res.on("close", (e) => {
+      if(!proxyRes.destroyed &&!proxyRes.closed ){
+        proxyRes.destroy();
+        console.log("client closed",e,req.url);
+      }
+     
+    });
     res.writeHead(proxyRes.statusCode, proxyRes.headers);
     proxyRes.pipe(res, { end: true });
+  
   });
 
+  req.on("error", (e) => {
+    console.log("client error");
+  });
+  
   proxyReq.on("error", (err) => {
     console.error("pipe proxy request error", err);
     res.writeHead(500, { "Content-Type": "text/plain" });
