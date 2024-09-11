@@ -102,15 +102,10 @@ function dev(options, ...proxies) {
             return;
         }
         let dispatch = proxies.find(({ from }) => req.url.startsWith(from));
-        if (dispatch == null && proxies.length > 0) {
+        if (dispatch == null && typeof proxies[0]?.dispatch === "function") {
             dispatch = proxies[0]?.dispatch(req.url);
         }
-        if (dispatch == null) {
-            console.log("not found proxy rule!", req.url);
-            res.end();
-            return;
-        }
-        if (req.url.startsWith(dispatch.from)) {
+        if (req.url.startsWith(dispatch?.from)) {
             proxy(req, res, dispatch);
         }
         else {
