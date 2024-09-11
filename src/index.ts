@@ -1,110 +1,51 @@
-import http from "http";
+import http, { IncomingMessage, ServerResponse } from "http";
 import https from "https";
+import { IDevOptions, IProxy } from "./interfaces";
+
+import { defaultDevOptions } from "./defaultDevOptions";
+import { defaultProxy } from "./defaultProxy";
+import open from "open";
 
 import path from "path";
 import mime from "mime";
 import fs from "fs";
-import open from "open";
-
-const defaultProxy = {
-  host: "localhost",
-  https: false,
-  dispatch(url) {
-    //dispatch can return a host ，port，path！！！
-    return false;
-  },
-  port: 8080,
-  from: "/api",
-  to: "/api",
-};
-const defaultOptions = {
-  server: "localhost",
-  openBrowser: true,
-  root: "./",
-  home: "/",
-  port: 8081,
-  response: (filePath, res) => {
-    return false;
-  },
-
-  notFoundHandler(req, res) {
-    res.writeHead(404, { "Content-Type": "text/plain" });
-    res.write("404 ,Not Found!");
-  },
-
-  serverErrorHandler(req, res) {},
-
-  fixPath: (req) => {
-    let [reqPath] = req.url.split("?");
-    reqPath = decodeURIComponent(reqPath);
-    let paths = reqPath.split("/");
-    let names = paths.pop().split(".");
-    let extName = names.pop();
-    let fileName = names.join(".");
-    if (fileName === "") {
-      //  /结尾
-      fileName = "index";
-    }
-    if (extName === "") {
-      const accept = req.headers.accept ?? "";
-      if (accept.includes("text/html")) {
-        extName = ".html";
-      } else if (accept == "*/*") {
-        extName = ".js";
-      }
-    } else {
-      extName = "." + extName;
-    }
-
-    return { reqDir: paths.join("/") + "/", fileName, extName };
-  },
-};
-const watchingScript = `
-if (typeof EventSource != undefined) {
-    const sse = new EventSource("/--watch")
-    sse.addEventListener("message", evt => {
-       if(evt.data=="reload") window.location.reload()
-    })
-}
-`;
-const sseInjection = `<script src="/--watching"></script>`;
-
-export function proxy(req, res, proxyOptions) {
+export function proxy(
+  req: IncomingMessage,
+  res: ServerResponse,
+  proxy: IProxy
+) {
   const { connection, host, ...originHeaders } = req.headers;
   const proxyHeaders =
-    typeof proxyOptions.headers == "function"
-      ? proxyOptions.headers(req)
-      : proxyOptions.headers ?? {};
+    typeof proxy.headers == "function"
+      ? proxy.headers(req)
+      : proxy.headers ?? {};
   const options = {
     method: req.method,
-    hostname: proxyOptions.host,
-    port: proxyOptions.port,
-    path: proxyOptions.to + req.url.substring(proxyOptions.from.length),
+    hostname: proxy.host,
+    port: proxy.port,
+    path: proxy.to + req.url.substring(proxy.from.length),
     headers: { ...originHeaders, ...proxyHeaders },
   };
   console.log("call proxy:", options);
 
- 
-  const proxyRequest = proxyOptions.https ? https.request : http.request;
+  const proxyRequest = proxy.https ? https.request : http.request;
 
   // Forward each  incoming proxy  request to proxy server
   const proxyReq = proxyRequest(options, (proxyRes) => {
     res.on("close", (e) => {
-      if(!proxyRes.destroyed &&!proxyRes.closed ){
+      if (!proxyRes.destroyed && !proxyRes.closed) {
         proxyRes.destroy();
-        console.log("client closed",e,req.url);
+        console.log("client closed", e, req.url);
       }
-     
     });
     res.writeHead(proxyRes.statusCode, proxyRes.headers);
     proxyRes.pipe(res, { end: true });
-  
   });
 
   req.on("error", (e) => {
     console.log("client error");
   });
-  
+
   proxyReq.on("error", (err) => {
     console.error("pipe proxy request error", err);
     res.writeHead(500, { "Content-Type": "text/plain" });
@@ -113,7 +54,21 @@ export function proxy(req, res, proxyOptions) {
   // Forward the body of the request
   req.pipe(proxyReq, { end: true });
 }
-export function dev(options = {}, proxyOptions = {}) {
+
+const watchingScript = `
+if (typeof EventSource != undefined) {
+    const sse = new EventSource("/--watching")
+    sse.addEventListener("message", evt => {
+       if(evt.data=="reload") window.location.reload()
+    })
+}
+`;
+const sseInjection = `<script src="/--watch"></script>`;
+
+export function dev(
+  options: Partial<IDevOptions>,
+  ...proxies: Partial<IProxy>[]
+) {
   const {
     server,
     root,
@@ -125,21 +80,22 @@ export function dev(options = {}, proxyOptions = {}) {
     fixPath,
     response,
   } = {
-    ...defaultOptions,
-    ...options,
+    ...defaultDevOptions,
+    ...(options ?? {}),
   };
-  if (proxyOptions instanceof Array === false) {
-    proxyOptions = { ...defaultProxy, ...proxyOptions };
-  }
+  proxies = proxies.flat();
+  //覆盖一下默认设置
+  proxies.forEach((proxy) => {
+    proxy = { ...defaultProxy, ...proxy };
+  });
+
   const devServer = http.createServer();
   devServer.listen(port);
   const serverURL = `http://${server}:${port}${home}`;
   console.info("local-dev-server start:", serverURL);
-  if (openBrowser) {
-    let app = "chrome";
-    if (openBrowser !== true) {
-      app = openBrowser;
-    }
+  if (openBrowser != false) {
+    let app = openBrowser == true ? "chrome" : openBrowser;
+
     open(serverURL, {
       app: {
         name: open.apps[app],
@@ -148,8 +104,9 @@ export function dev(options = {}, proxyOptions = {}) {
   }
 
   const watches = [];
+
   devServer.on("request", (req, res) => {
-    if (req.url == "/--watching") {
+    if (req.url == "/--watch") {
       res.writeHead(200, {
         "Content-Type": "application/javascript",
         "Access-Control-Allow-Origin": "*",
@@ -157,7 +114,7 @@ export function dev(options = {}, proxyOptions = {}) {
       res.end(watchingScript);
       return;
     }
-    if (req.url == "/--watch") {
+    if (req.url == "/--watching") {
       res.writeHead(200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -169,21 +126,19 @@ export function dev(options = {}, proxyOptions = {}) {
       return;
     }
 
-    let dispatch = defaultProxy;
-    if (proxyOptions instanceof Array) {
-      const rule = proxyOptions.find(({ from }) => req.url.startsWith(from));
-      if (rule) dispatch = rule;
-    } else {
-      dispatch = proxyOptions.dispatch(req.url);
-      if (dispatch === false) {
-        dispatch = proxyOptions;
-      } else {
-        dispatch = { ...proxyOptions, ...dispatch };
-      }
+    let dispatch = proxies.find(({ from }) => req.url.startsWith(from));
+    if (dispatch == null && proxies.length > 0) {
+      dispatch = proxies[0]?.dispatch(req.url);
+    }
+
+    if (dispatch == null) {
+      console.log("not found proxy rule!", req.url);
+      res.end();
+      return;
     }
 
     if (req.url.startsWith(dispatch.from)) {
-      proxy(req, res, dispatch);
+      proxy(req, res, dispatch as IProxy);
     } else {
       if (req.method == "GET") {
         console.log("get url:", req.url);

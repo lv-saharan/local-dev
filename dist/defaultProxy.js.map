@@ -1,0 +1,1 @@
+{"version":3,"file":"defaultProxy.js","sourceRoot":"","sources":["../src/defaultProxy.ts"],"names":[],"mappings":";;;AAEa,QAAA,YAAY,GAAW;IAClC,IAAI,EAAE,WAAW;IACjB,IAAI,EAAE,IAAI;IACV,KAAK,EAAE,KAAK;IACZ,QAAQ,CAAC,GAAG;QACV,OAAO,IAAI,CAAC;IACd,CAAC;IACD,IAAI,EAAE,MAAM;IACZ,EAAE,EAAE,MAAM;CACX,CAAC"}

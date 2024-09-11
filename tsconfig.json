@@ -1,0 +1,21 @@
+{
+  "exclude": ["node_modules", "dist"],
+  "include": ["src"],
+  "compilerOptions": {
+    "module": "NodeNext",
+    // "types": ["node", "jest"],
+    "allowJs": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "isolatedModules": true, //https://esbuild.github.io/content-types/#isolated-modules
+    "esModuleInterop": true, //https://esbuild.github.io/content-types/#es-module-interop
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true, //生成d.ts esbuild 不支持
+    "experimentalDecorators": true /* 启用装饰器 */,
+    "emitDecoratorMetadata": true /* 启用装饰器元数据 es不支持*/,
+    "baseUrl": "."
+
+  }
+}
