@@ -63,7 +63,7 @@ if (typeof EventSource != undefined) {
     })
 }
 `;
-const sseInjection = `<script src="/--watch"></script>`;
+const sseInjection = `<script src="/--listening"></script>`;
 
 export function dev(
   options: Partial<IDevOptions>,
@@ -74,6 +74,7 @@ export function dev(
     root,
     home,
     port,
+    https: httpsOption,
     openBrowser,
     notFoundHandler,
     serverErrorHandler,
@@ -89,9 +90,24 @@ export function dev(
     proxy = { ...defaultProxy, ...proxy };
   });
 
-  const devServer = http.createServer();
+  const devServer =
+    httpsOption === false
+      ? http.createServer()
+      : https.createServer({
+          key:
+            typeof httpsOption.key === "string"
+              ? fs.readFileSync(httpsOption.key)
+              : httpsOption.key,
+          cert:
+            typeof httpsOption.cert === "string"
+              ? fs.readFileSync(httpsOption.cert)
+              : httpsOption.cert,
+        });
   devServer.listen(port);
-  const serverURL = `http://${server}:${port}${home}`;
+
+  const serverURL = `http${
+    httpsOption === false ? "" : "s"
+  }://${server}:${port}${home}`;
   console.info("local-dev-server start:", serverURL);
   if (openBrowser != false) {
     let app = openBrowser == true ? "chrome" : openBrowser;
@@ -106,7 +122,7 @@ export function dev(
   const watches = [];
 
   devServer.on("request", (req, res) => {
-    if (req.url == "/--watch") {
+    if (req.url == "/--listening") {
       res.writeHead(200, {
         "Content-Type": "application/javascript",
         "Access-Control-Allow-Origin": "*",

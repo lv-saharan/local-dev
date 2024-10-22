@@ -57,9 +57,9 @@ if (typeof EventSource != undefined) {
     })
 }
 `;
-const sseInjection = `<script src="/--watch"></script>`;
+const sseInjection = `<script src="/--listening"></script>`;
 function dev(options, ...proxies) {
-    const { server, root, home, port, openBrowser, notFoundHandler, serverErrorHandler, fixPath, response, } = {
+    const { server, root, home, port, https: httpsOption, openBrowser, notFoundHandler, serverErrorHandler, fixPath, response, } = {
         ...defaultDevOptions_1.defaultDevOptions,
         ...(options ?? {}),
     };
@@ -68,9 +68,18 @@ function dev(options, ...proxies) {
     proxies.forEach((proxy) => {
         proxy = { ...defaultProxy_1.defaultProxy, ...proxy };
     });
-    const devServer = http_1.default.createServer();
+    const devServer = httpsOption === false
+        ? http_1.default.createServer()
+        : https_1.default.createServer({
+            key: typeof httpsOption.key === "string"
+                ? fs_1.default.readFileSync(httpsOption.key)
+                : httpsOption.key,
+            cert: typeof httpsOption.cert === "string"
+                ? fs_1.default.readFileSync(httpsOption.cert)
+                : httpsOption.cert,
+        });
     devServer.listen(port);
-    const serverURL = `http://${server}:${port}${home}`;
+    const serverURL = `http${httpsOption === false ? "" : "s"}://${server}:${port}${home}`;
     console.info("local-dev-server start:", serverURL);
     if (openBrowser != false) {
         let app = openBrowser == true ? "chrome" : openBrowser;
@@ -82,7 +91,7 @@ function dev(options, ...proxies) {
     }
     const watches = [];
     devServer.on("request", (req, res) => {
-        if (req.url == "/--watch") {
+        if (req.url == "/--listening") {
             res.writeHead(200, {
                 "Content-Type": "application/javascript",
                 "Access-Control-Allow-Origin": "*",

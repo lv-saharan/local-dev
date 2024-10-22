@@ -4,6 +4,7 @@ exports.defaultDevOptions = void 0;
 exports.defaultDevOptions = {
     server: "localhost",
     port: 8081,
+    https: false,
     openBrowser: true,
     root: "./",
     home: "/",

@@ -33,6 +33,10 @@ export interface IDevOptions {
      * Server start port：80 | 443 | 9000 |...
      */
     port: number;
+    https: false | {
+        key: string;
+        cert: string;
+    };
     /**
      * Open browser
      */

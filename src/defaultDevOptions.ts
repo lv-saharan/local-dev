@@ -2,6 +2,7 @@ import { IDevOptions } from "./interfaces";
 export const defaultDevOptions: IDevOptions = {
   server: "localhost",
   port: 8081,
+  https: false,
   openBrowser: true,
   root: "./",
   home: "/",

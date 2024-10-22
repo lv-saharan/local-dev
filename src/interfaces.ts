@@ -6,9 +6,7 @@ export interface IProxy {
   from: string;
   to: string;
   https?: boolean;
-  headers?:
-    | {}
-    | ((req: IncomingMessage) =>{});
+  headers?: {} | ((req: IncomingMessage) => {});
   dispatch?(url: string): IProxy | null;
 }
 
@@ -36,6 +34,12 @@ export interface IDevOptions {
    */
   port: number;
 
+  https:
+    | false
+    | {
+        key: string;
+        cert: string;
+      };
   /**
    * Open browser
    */
