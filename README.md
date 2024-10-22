@@ -98,6 +98,7 @@ import { dev } from "local-dev-server";
 let buildResult=null
 const { reload } = dev({
   port: 9000,
+  https:false,//https:{key:key,cert:cert}
   response: (filePath, res) => {
     //if use esbuild ,and write:false
     //find the contents of esbuild

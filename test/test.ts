@@ -1,6 +1,13 @@
 import { dev } from "../src/index";
 const { reload } = dev(
-  { root: "./test/", openBrowser: "edge" },
+  {
+    root: "./test/",
+    openBrowser: "edge",
+    https: {
+      key: "c:/soft/localhost+3.key",
+      cert: "c:/soft/localhost+3.pem",
+    },
+  },
   {
     dispatch: (url) => {
       console.log(url);
