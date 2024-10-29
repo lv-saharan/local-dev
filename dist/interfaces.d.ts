@@ -5,7 +5,8 @@ export interface IProxy {
     host: string;
     port: number;
     from: string;
-    to: string;
+    to?: string;
+    path?: string;
     https?: boolean;
     headers?: {} | ((req: IncomingMessage) => {});
     dispatch?(url: string): IProxy | null;

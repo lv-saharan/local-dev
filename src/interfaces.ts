@@ -4,7 +4,8 @@ export interface IProxy {
   host: string;
   port: number;
   from: string;
-  to: string;
+  to?: string;
+  path?: string; //设置path就不需要设置to
   https?: boolean;
   headers?: {} | ((req: IncomingMessage) => {});
   dispatch?(url: string): IProxy | null;

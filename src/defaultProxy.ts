@@ -4,7 +4,7 @@ export const defaultProxy: IProxy = {
   host: "localhost",
   port: 8080,
   https: false,
-  dispatch(url) {
+  dispatch(url): IProxy | null {
     return null;
   },
   from: "/api",

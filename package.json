@@ -1,6 +1,6 @@
 {
   "name": "local-dev-server",
-  "version": "1.0.31",
+  "version": "1.0.33",
   "description": "a local dev server with simple api proxy.easy and fast.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

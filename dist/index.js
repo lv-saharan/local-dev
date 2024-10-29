@@ -21,7 +21,7 @@ function proxy(req, res, proxy) {
         method: req.method,
         hostname: proxy.host,
         port: proxy.port,
-        path: proxy.to + req.url.substring(proxy.from.length),
+        path: proxy.path ?? proxy.to + req.url.substring(proxy.from.length),
         headers: { ...originHeaders, ...proxyHeaders },
     };
     console.log("call proxy:", options);
