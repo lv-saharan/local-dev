@@ -1,12 +1,12 @@
 {
   "name": "local-dev-server",
-  "version": "1.0.33",
+  "version": "1.0.35",
   "description": "a local dev server with simple api proxy.easy and fast.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "ts-node ./test/test.ts",
-    "publish": "tsc & npm publish",
+    "pub": "tsc & npm publish",
     "build": "node esbuild.js"
   },
   "repository": {
